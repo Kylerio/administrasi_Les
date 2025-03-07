@@ -1,13 +1,15 @@
 import React from 'react'
 import { useState, useEffect } from "react";
-import Schedule from './Schedule';
 
 const Home = () => {
-  const [pengajar, setPengajar] = useState({
-    nama: "Rimuru Tempest",
-    role: "Pengajar",
-    foto: "https://randomuser.me/api/portraits/lego/3.jpg",
-  });
+  const [pengajar, setPengajar] = useState(null);
+
+  useEffect(() => {
+    const storedProfile = localStorage.getItem("userProfile");
+    if (storedProfile) {
+      setPengajar(JSON.parse(storedProfile));
+    }
+  }, []);
 
   const [schedules] = useState([
     { day: "Senin", time: "10:00 - 11:30", subject: "Matematika", student: "Aldi", mode: "Offline" },
@@ -40,13 +42,19 @@ const Home = () => {
   return (
     <div className="p-6">
       {/* Profile in Dashboard */}
-      <div className="flex items-center space-x-4">
-        <img src={pengajar.foto} alt="Foto Profil" className="w-16 h-16 rounded-full" />
-        <div>
-          <h2 className="text-lg font-semibold">Selamat Datang, {pengajar.nama}!</h2>
-          <p className="text-gray-500">{pengajar.role}</p>
+      {pengajar && (
+        <div className='flex items-center space-x-4 bg-white p-4 md:p-6 rounded-lg shadow-md'>
+          <img 
+          src={pengajar.profilePicture || "https://randomuser.me/api/portraits/lego/3.jpg"} 
+          alt="Foto Profile" 
+          className="w-24 h-24 rounded-full" 
+          />
+          <div>
+            <h2 className='text-lg font-semibold'>Selamat Datang, {pengajar.name}</h2>
+            <p className='text-sm text-gray-500'>{pengajar.subject} - {pengajar.location}</p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Upcoming Schedule */}
       <div className='bg-white mt-6 p-4 md:p-6 rounded-lg shadow-md'>

@@ -8,6 +8,12 @@ import { FiLogOut, FiMenu } from "react-icons/fi";
 const Header = () => {
     const [showDropDown, setShowDropDown] = useState(false)
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [profile, setProfile] = useState(null);
+
+    useEffect(() => {
+            const savedProfile = JSON.parse(localStorage.getItem("userProfile"));
+            if (savedProfile) setProfile(savedProfile);
+        }, []);
 
     useEffect(() =>{
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -42,7 +48,7 @@ const Header = () => {
                     <img 
                         onClick={() => setShowDropDown(!showDropDown)}
                         className='w-10 h-10 rounded-full border-2 cursor-pointer'
-                        src="https://randomuser.me/api/portraits/lego/3.jpg" 
+                        src={profile?.profilePicture || "https://randomuser.me/api/portraits/lego/3.jpg"} 
                         alt="profile" 
                     />
 
