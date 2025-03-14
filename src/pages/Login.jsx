@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 
-const dummyUser = {
-  email: "rimuru@example.com",
-  password: "password123",
-};
+const dummyUser = [
+  {email: "rimuru@example.com", password: "password123", role: "teacher"},
+  {email: "okemin@example.com", password: "digidawaw", role: "admin"},
+];
 
-const Login = () => {
+const Login = ({ setIsLoggedIn, setRole }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -15,13 +15,38 @@ const Login = () => {
     const handleLogin = (e) => {
       e.preventDefault();
 
-      if (email === dummyUser.email && password === dummyUser.password
-      ) {
+      //ini kalo mau pake email dan password beneran
+      if (email === "rimuru@example.com" && password === "password123") {
         localStorage.setItem("token", "true");
+        localStorage.setItem("role", "teacher");
+        setIsLoggedIn(true);
+        setRole("teacher");
         navigate("/profileForm");
+      } else if (email === "admin@example.com" && password === "adminpass") {
+        localStorage.setItem("token", "true");
+        localStorage.setItem("role", "admin");
+        setIsLoggedIn(true);
+        setRole("admin");
+        navigate("/admin");
       } else {
         setError("Email atau password salah");
       }
+
+      /* ini kalo mau pake dummy user
+      const user = dummyUser.find((user) => user.email === email && user.password === password);
+
+      if (user) {
+        localStorage.setItem("token", "true");
+        localStorage.setItem("role", user.role);
+
+        if (user.role === "teacher") {
+          navigate("/profileForm");
+        } else if (user.role === "admin") {
+          navigate("/admin");
+        }
+      } else {
+        setError("Email or password is wrong");
+      } */
     };
 
   return (
