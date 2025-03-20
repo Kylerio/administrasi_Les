@@ -11,14 +11,14 @@ const Profile = () => {
     }, []);
 
     return (
-        <div className='flex justify-center items-center bg-gray-100'>
-            <div className='p-6 bg-white rounded-lg shadow-lg max-w-md w-full'>
+        <div className='flex justify-center items-center bg-gray-100 px-4 min-h-screen'>
+            <div className='p-6 bg-white rounded-lg shadow-lg max-w-md md:max-w-xl w-full'>
                 <h2 className='text-2xl font-semibold mb-4'>Teacher Profile</h2>
 
                 {profile ? (
                     <div className='flex flex-col items-center'>
                         {/* Profile Picture */}
-                        {profile.profilePicture && <img src={profile.profilePicture || "https://randomuser.me/api/portraits/lego/3.jpg"} alt='Profile' className='w-24 h-24 rounded-full border-4 border-gray-300 shadow-md mb-4' />}
+                        {profile.profilePicture && <img src={profile.profilePicture || "https://randomuser.me/api/portraits/lego/3.jpg"} alt='Profile' className='w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-gray-300 shadow-md mb-4' />}
 
                         {/* Profile Data */}
                         <div className='text-gray-600 text-lg space-y-2 w-full'>

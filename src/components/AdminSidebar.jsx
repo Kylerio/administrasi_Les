@@ -5,6 +5,7 @@ import Logo from '../assets/Logo.png'
 // icons //
 import { PiChalkboardFill } from "react-icons/pi"
 import { PiUserListFill } from "react-icons/pi"
+import { RiFileList3Fill } from "react-icons/ri";
 
 const AdminSidebar = () => {
     const location = useLocation();
@@ -12,6 +13,7 @@ const AdminSidebar = () => {
     const AdminSideBar_Links = [
         { id: 1, path:"/admin", name: "Create Session", icon: PiChalkboardFill},
         { id: 2, path:"/admin/viewDataTeacher", name: "View Data Teacher", icon: PiUserListFill},
+        { id: 3, path:"/admin/viewListFee", name: "View List Fee", icon: RiFileList3Fill},
     ]
   return (
     <div className='w-16 md:w-56 fixed left-0 top-0 z-10 h-screen border-r pt-8 px-4 bg-[#ffffff]'>

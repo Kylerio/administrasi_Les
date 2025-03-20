@@ -12,8 +12,8 @@ const Home = () => {
   }, []);
 
   const [schedules] = useState([
-    { day: "Senin", time: "10:00 - 11:30", subject: "Matematika", student: "Aldi" },
-    { day: "Rabu", time: "14:00 - 15:30", subject: "Fisika", student: "Dinda" },
+    { day: "Senin", startTime: "10:00", duration:"1 Hours", subject: "Matematika", student: "Aldi" },
+    { day: "Rabu", startTime: "14:00", duration:"2 Hours", subject: "Fisika", student: "Dinda" },
   ]);
 
   const [sessions] = useState([
@@ -73,7 +73,8 @@ const Home = () => {
                 <thead>
                   <tr className="bg-indigo-500 text-white text-left">
                     <th className="p-3">Day</th>
-                    <th className="p-3">Time</th>
+                    <th className="p-3">Start Time</th>
+                    <th className="p-3">Duration</th>
                     <th className="p-3">Subject</th>
                     <th className="p-3">Student</th>
                   </tr>
@@ -82,7 +83,8 @@ const Home = () => {
                   {schedules.map((schedule, index) => (
                     <tr key={index} className="border-b hover:bg-indigo-50">
                       <td className="p-3">{schedule.day}</td>
-                      <td className="p-3">{schedule.time}</td>
+                      <td className="p-3">{schedule.startTime}</td>
+                      <td className="p-3">{schedule.duration}</td>
                       <td className="p-3">{schedule.subject}</td>
                       <td className="p-3">{schedule.student}</td>
                     </tr>
@@ -95,12 +97,9 @@ const Home = () => {
             <div className="md:hidden mt-4 space-y-3">
               {schedules.map((schedule, index) => (
                 <div key={index} className="p-4 bg-gray-100 rounded-lg shadow-sm">
-                  <p className="text-sm font-semibold">{schedule.day}, {schedule.time}</p>
+                  <p className="text-sm font-semibold">{schedule.day}, {schedule.startTime} | {schedule.duration}</p>
                   <p className="text-base font-bold">{schedule.subject}</p>
                   <p className="text-sm text-gray-600">{schedule.student}</p>
-                  <span className={`text-xs px-2 py-1 rounded-md mt-1 inline-block ${schedule.mode === "Online" ? "bg-green-500 text-white" : "bg-blue-500 text-white"}`}>
-                    {schedule.mode}
-                  </span>
                 </div>
               ))}
             </div>

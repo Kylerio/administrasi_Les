@@ -10,6 +10,7 @@ import Login from "./pages/Login"
 import CreateSession from "./adminpages/CreateSession"
 import ViewDataTeacher from "./adminpages/ViewDataTeacher"
 import AdminLayout from "./components/AdminLayout"
+import ViewListFee from "./adminpages/ViewListFee"
 
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
         <Route path="/admin" element={isLoggedIn && role === "admin" ? <AdminLayout /> : <Navigate to="/login" />}>
           <Route index element={<CreateSession />} />
           <Route path="viewDataTeacher" element={<ViewDataTeacher />} />
+          <Route path="viewListFee" element={<ViewListFee />} />
         </Route>
 
         {/* jika belum login, arahkan ke halaman login */}

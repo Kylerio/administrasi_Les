@@ -3,9 +3,9 @@ import React, { useState } from 'react'
 const Schedule = () => {
   const [filter, setFilter] = useState("all");
   const [schedules, setSchedules] = useState([
-    { id: 1, date: "2025-03-10", time: "10:00 - 12:00", student: "Budi", location: "Jakarta", status: "Verified" },
-    { id: 2, date: "2025-03-12", time: "14:00 - 16:00", student: "Siti", location: "Online", status: "Pending" },
-    { id: 3, date: "2025-03-15", time: "09:00 - 11:00", student: "Andi", location: "Bandung", status: "Verified" },
+    { id: 1, date: "2025-03-10", startTime: "10:00", duration: "1 Hours", student: "Budi", location: "Pesanggrahan", status: "Verified" },
+    { id: 2, date: "2025-03-12", startTime: "14:00", duration: "3 Hours", student: "Siti", location: "BXC", status: "Pending" },
+    { id: 3, date: "2025-03-15", startTime: "09:00", duration: "2 Hours", student: "Andi", location: "Bintaro", status: "Verified" },
   ]);
 
   // Filter jadwal berdasarkan status
@@ -42,7 +42,8 @@ const Schedule = () => {
           <thead className="bg-indigo-500 text-white">
             <tr>
               <th className="p-2">Date</th>
-              <th className="p-2">Time</th>
+              <th className="p-2">Start Time</th>
+              <th className="p-2">Duration</th>
               <th className="p-2">Student</th>
               <th className="p-2">Location</th>
               <th className="p-2">Status</th>
@@ -54,7 +55,8 @@ const Schedule = () => {
               filteredSchedules.map((schedule) => (
                 <tr key={schedule.id} className="text-center border-t">
                   <td className="p-2">{schedule.date}</td>
-                  <td className="p-2">{schedule.time}</td>
+                  <td className="p-2">{schedule.startTime}</td>
+                  <td className="p-2">{schedule.duration}</td>
                   <td className="p-2">{schedule.student}</td>
                   <td className="p-2">{schedule.location}</td>
                   <td className={`p-2 font-semibold 
@@ -87,10 +89,11 @@ const Schedule = () => {
         {filteredSchedules.length > 0 ? (
           filteredSchedules.map((schedule) => (
             <div key={schedule.id} className="border p-4 mb-4 rounded-lg shadow">
-              <p><strong>Tanggal:</strong> {schedule.date}</p>
-              <p><strong>Waktu:</strong> {schedule.time}</p>
-              <p><strong>Murid:</strong> {schedule.student}</p>
-              <p><strong>Lokasi:</strong> {schedule.location}</p>
+              <p><strong>Date:</strong> {schedule.date}</p>
+              <p><strong>Start Time:</strong> {schedule.startTime}</p>
+              <p><strong>Duration:</strong> {schedule.duration}</p>
+              <p><strong>Student:</strong> {schedule.student}</p>
+              <p><strong>Location:</strong> {schedule.location}</p>
               <p className={`font-semibold 
                 ${schedule.status === "Verified" ? "text-green-600" : schedule.status === "Completed" ? "text-gray-600" : "text-red-500"}`}>
                 <strong>Status:</strong> {schedule.status}
