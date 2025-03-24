@@ -7,7 +7,7 @@ const Login = ({ setIsLoggedIn, setRole }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    
+
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
@@ -27,31 +27,35 @@ const Login = ({ setIsLoggedIn, setRole }) => {
                 password,
             });
             console.log("Login Response:", response.data);
-            console.log(response.data); // Log the response for debugging
 
             if (response.data.message === "Login successful") {
-                // Set user data in local storage
-                localStorage.setItem("token", response.data.token);
-                localStorage.setItem("role", response.data.role);
-                localStorage.setItem("isProfileComplete", response.data.isProfileComplete);
+                // Store relevant user data in localStorage
+                localStorage.setItem("id", response.data.teacher_id); // Store the ID
+                localStorage.setItem("email", response.data.email);   // Store the email
+                localStorage.setItem("token", response.data.token);   // Store the authentication token
+                localStorage.setItem("role", response.data.role);     // Store the user role
+                localStorage.setItem("isProfileComplete", response.data.isProfileComplete); // Store the profile completion status
 
-                // Update state
+                // Update React state
                 setIsLoggedIn(true);
                 setRole(response.data.role);
-                console.log("Set State:", response.data.role);
+
                 console.log("Login is successful!");
+                console.log("ID:", response.data.teacher_id);
+                console.log("Email:", response.data.email);
                 console.log("Role:", response.data.role);
                 console.log("Profile complete:", response.data.isProfileComplete);
-                
+
                 // Redirect based on role
                 if (response.data.role === 'teacher') {
                     console.log("Navigating to /profileForm");
-                    navigate("/profileForm"); // Change to your teacher dashboard route
+                    navigate("/profileForm"); // Redirect teacher to profile form
                 } else if (response.data.role === 'admin') {
                     console.log("Navigating to /admin");
-                    navigate('/admin'); // Change to your admin dashboard route
+                    navigate('/admin'); // Redirect admin to admin dashboard
                 }
             } else {
+                // Display error message from the server
                 setError(response.data.message || "Login failed. Please check your credentials.");
             }
         } catch (error) {
@@ -64,9 +68,11 @@ const Login = ({ setIsLoggedIn, setRole }) => {
         <div className="flex justify-center items-center h-screen bg-gray-100">
             <div className="bg-white p-6 rounded-lg shadow-md w-80">
                 <h2 className="text-xl font-semibold text-center mb-4">Login</h2>
-                
+
+                {/* Error Message */}
                 {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                
+
+                {/* Login Form */}
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium">Email</label>
