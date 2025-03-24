@@ -12,6 +12,7 @@ const Login = ({ setIsLoggedIn, setRole }) => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        console.log("Login button clicked");
         setError("");
 
         // Basic validation
@@ -25,12 +26,23 @@ const Login = ({ setIsLoggedIn, setRole }) => {
                 email,
                 password,
             });
-
+            console.log("Login Response:", response.data);
             console.log(response.data); // Log the response for debugging
 
-            if (response.data.success) {
+            if (response.data.message === "Login successful") {
+                // Set user data in local storage
+                localStorage.setItem("token", response.data.token);
+                localStorage.setItem("role", response.data.role);
+                localStorage.setItem("isProfileComplete", response.data.isProfileComplete);
+
+                // Update state
                 setIsLoggedIn(true);
                 setRole(response.data.role);
+                console.log("Set State:", response.data.role);
+                console.log("Login is successful!");
+                console.log("Role:", response.data.role);
+                console.log("Profile complete:", response.data.isProfileComplete);
+                
                 // Redirect based on role
                 if (response.data.role === 'teacher') {
                     console.log("Navigating to /profileForm");

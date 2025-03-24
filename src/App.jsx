@@ -23,12 +23,10 @@ function App() {
     const savedRole = localStorage.getItem("role");
     const profileStatus = localStorage.getItem("isProfileComplete");
 
-    if (token){
-      setIsLoggedIn(true);
-      setRole(savedRole);
-      setIsProfileComplete(profileStatus === "true");
-    } 
-  }, []);
+    setIsLoggedIn(!!token);
+    setRole(savedRole);
+    setIsProfileComplete(profileStatus === "true");
+  }, [isLoggedIn, role]);
 
   return (
     <BrowserRouter>
@@ -37,7 +35,11 @@ function App() {
         <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} setRole={setRole} />}/>
 
         {/* jika teacher login pertama kali, harus isi form profile */}
-        <Route path="/profileForm" element={isLoggedIn && role === "teacher" && !isProfileComplete ? <ProfileForm setIsProfileComplete={setIsProfileComplete} /> : <Navigate to="/teacher" />}/>
+        <Route path="/profileForm" element={
+          isLoggedIn && role === "teacher" ? 
+          (!isProfileComplete ? <ProfileForm setIsProfileComplete={setIsProfileComplete} /> : <Navigate to="/teacher" />)
+          : <Navigate to="/login" />
+        } />
         
         {/* side teacher */}
         <Route path="/teacher" element={isLoggedIn && role === "teacher" ? <Layout /> : <Navigate to="/login" />}>
