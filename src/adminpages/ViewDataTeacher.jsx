@@ -1,62 +1,58 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
+import API_URL from '../api'; // Import your API base URL
 
 const ViewDataTeacher = () => {
   const [teachers, setTeachers] = useState([]);
 
-  const sampleTeachers = [
-    {
-      name: "John Doe",
-      subject: "Mathematics",
-      location: { latitude: -6.200000, longitude: 106.816666 },
-      availableDays: ["Monday", "Wednesday", "Friday"]
-    },
-    {
-      name: "Jane Smith",
-      subject: "Physics",
-      location: { latitude: -7.250445, longitude: 112.768845 },
-      availableDays: ["Tuesday", "Thursday"]
-    },
-    {
-      name: "Michael Johnson",
-      subject: "Chemistry",
-      location: { latitude: -6.917464, longitude: 107.619123 },
-      availableDays: ["Monday", "Tuesday"]
-    },
-    {
-      name: "Emily Brown",
-      subject: "Biology",
-      location: { latitude: -6.973, longitude: 110.418 },
-      availableDays: ["Wednesday", "Friday"]
-    },
-    {
-      name: "Chris Evans",
-      subject: "History",
-      location: { latitude: -8.670458, longitude: 115.212629 },
-      availableDays: ["Monday", "Thursday"]
-    },
-    {
-      name: "Anna White",
-      subject: "English",
-      location: { latitude: -5.147665, longitude: 119.432732 },
-      availableDays: ["Tuesday", "Thursday", "Saturday"]
-    },
-  ];
-  
-  // Simpan ke localStorage untuk testing
-  localStorage.setItem("teacher", JSON.stringify(sampleTeachers));
-  
+  // Location mapping: convert place names to latitude and longitude
+  const locationMapping = {
+    Jakarta: { latitude: -6.200000, longitude: 106.816666 },
+    Bintaro: { latitude: -6.268230, longitude: 106.764840 },
+    BSD: { latitude: -6.305968, longitude: 106.672272 },
+    Bandung: { latitude: -6.914744, longitude: 107.609810 },
+    STAN: { latitude: -6.267222, longitude: 106.753889 },
+  };
 
-  // Ambil data teacher dari localStorage saat halaman dimuat
+  // Fetch teacher data from the API
   useEffect(() => {
-    const storedTeachers = JSON.parse(localStorage.getItem("teacher")) || [];
-    setTeachers(storedTeachers);
+    const fetchTeachers = async () => {
+      try {
+        const response = await fetch(`${API_URL}/fetchTeachers.php`);
+        const data = await response.json();
+
+        // Filter out teachers with the role "admin"
+        const filteredTeachers = data.filter((teacher) => teacher.role !== 'admin');
+        setTeachers(filteredTeachers);
+      } catch (error) {
+        console.error('Error fetching teacher data:', error);
+      }
+    };
+
+    fetchTeachers();
   }, []);
 
-  // Hapus teacher dari daftar
-  const handleDelete = (index) => {
-    const updatedTeachers = teachers.filter((_, i) => i !== index);
-    setTeachers(updatedTeachers);
-    localStorage.setItem("teachers", JSON.stringify(updatedTeachers));
+  // Delete a teacher from the database and update the frontend
+  const handleDelete = async (teacherId, index) => {
+    try {
+      const response = await fetch(`${API_URL}/deleteTeacher.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: teacherId }), // Send the teacher's ID
+      });
+
+      const result = await response.json();
+
+      if (result.message === 'Teacher deleted successfully') {
+        const updatedTeachers = teachers.filter((_, i) => i !== index);
+        setTeachers(updatedTeachers); // Update the UI
+      } else {
+        console.error(result.message);
+      }
+    } catch (error) {
+      console.error('Error deleting teacher:', error);
+    }
   };
 
   return (
@@ -71,32 +67,37 @@ const ViewDataTeacher = () => {
                 <th className="border p-3 text-left">Name</th>
                 <th className="border p-3 text-left">Subject</th>
                 <th className="border p-3 text-left">Location</th>
-                <th className="border p-3 text-left">Available Days</th>
+                <th className="border p-3 text-left">Availability</th>
                 <th className="border p-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {teachers.map((teacher, index) => (
-                <tr key={index} className="border hover:bg-gray-50">
-                  <td className="border p-3">{index + 1}</td>
-                  <td className="border p-3">{teacher.name}</td>
-                  <td className="border p-3">{teacher.subject}</td>
-                  <td className="border p-3">
-                    {teacher.location
-                      ? `${teacher.location.latitude}, ${teacher.location.longitude}`
-                      : "Not Set"}
-                  </td>
-                  <td className="border p-3">{teacher.availableDays.join(", ")}</td>
-                  <td className="border p-3 text-center">
-                    <button
-                      onClick={() => handleDelete(index)}
-                      className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {teachers.map((teacher, index) => {
+                const location = locationMapping[teacher.location] || { latitude: 'Not Set', longitude: 'Not Set' };
+                return (
+                  <tr key={index} className="border hover:bg-gray-50">
+                    <td className="border p-3">{index + 1}</td>
+                    <td className="border p-3">{teacher.name}</td>
+                    <td className="border p-3">{teacher.subject}</td>
+                    <td className="border p-3">
+                      {location.latitude !== 'Not Set'
+                        ? `${location.latitude}, ${location.longitude}`
+                        : teacher.location}
+                    </td>
+                    <td className="border p-3">
+                      {teacher.availability || 'No availability listed'}
+                    </td>
+                    <td className="border p-3 text-center">
+                      <button
+                        onClick={() => handleDelete(teacher.teacher_id, index)}
+                        className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -105,6 +106,6 @@ const ViewDataTeacher = () => {
       )}
     </div>
   );
-}
+};
 
-export default ViewDataTeacher
+export default ViewDataTeacher;

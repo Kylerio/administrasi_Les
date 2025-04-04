@@ -3,26 +3,25 @@ import { useNavigate } from 'react-router-dom';
 
 const ProfileForm = ({ setIsProfileComplete }) => {
     const [name, setName] = useState(""); // Teacher's name
+    const [email, setEmail] = useState(""); // Teacher's email
     const [subject, setSubject] = useState(""); // Subject expertise
     const [location, setLocation] = useState(""); // Location
     const [availableDays, setAvailableDays] = useState(""); // Availability days
-    const [profilePicture, setProfilePicture] = useState(null); // Profile picture file
+    const [profilePicture, setProfilePicture] = useState(""); // Profile picture (file name for now)
+    const [errorMessage, setErrorMessage] = useState(""); // To display errors
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Fetch teacher's profile data based on logged-in user
         const fetchTeacherData = async () => {
             try {
-                // Retrieve stored ID and email from localStorage
                 const userId = localStorage.getItem("id");
                 const userEmail = localStorage.getItem("email");
 
-                if (!userId && !userEmail) {
-                    console.error("No user ID or email found in localStorage");
+                if (!userId || !userEmail) {
+                    setErrorMessage("No user ID or email found in localStorage.");
                     return;
                 }
 
-                // Send POST request to fetch profile data
                 const response = await fetch('http://localhost/administrasi_les_api/teachers.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -30,63 +29,65 @@ const ProfileForm = ({ setIsProfileComplete }) => {
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
+                    const errorText = await response.text();
+                    setErrorMessage("Failed to fetch profile data. Please try again.");
+                    return;
                 }
 
                 const data = await response.json();
-                if (data) {
-                    setName(data.name || "");
-                    setSubject(data.subject || "");
-                    setLocation(data.location || "");
-                    setAvailableDays(data.availability?.split(", ") || "");
-                }
+                setName(data.name || "");
+                setEmail(data.email || "");
+                setSubject(data.subject || "");
+                setLocation(data.location || "");
+                setAvailableDays(data.availability || "");
+                setProfilePicture(data.profile_picture || "");
             } catch (error) {
-                console.error("Error fetching teacher data:", error);
+                setErrorMessage("An unexpected error occurred while fetching data.");
             }
         };
 
         fetchTeacherData();
     }, []);
 
-    const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setProfilePicture(file);
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Prepare the payload for updating the profile
+        if (!name || !email || !subject || !location || !availableDays) {
+            setErrorMessage("All fields are required. Please fill out the form completely.");
+            return;
+        }
+
         const payload = {
             name,
+            email,
             subject,
             location,
             availableDays: availableDays.split(",").map((day) => day.trim()),
-            profilePicture: profilePicture ? profilePicture.name : null, // Send only the file name
+            profilePicture, // Send profile picture name for now
         };
 
         try {
             const response = await fetch('http://localhost/administrasi_les_api/teachers.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(payload), // Send JSON payload
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+                const errorText = await response.text();
+                setErrorMessage("Failed to save profile. Please try again.");
+                return;
             }
 
             const result = await response.json();
             if (result.message === "Profile created successfully" || result.message === "Profile updated successfully") {
                 setIsProfileComplete(true);
-                navigate("/home"); // Redirect to the home/dashboard page after successful submission
+                navigate("/home"); // Redirect after successful submission
             } else {
-                console.error("Error submitting form:", result.message);
+                setErrorMessage(result.message || "Failed to save profile.");
             }
         } catch (error) {
-            console.error("Error submitting form:", error);
+            setErrorMessage("An unexpected error occurred while saving the profile.");
         }
     };
 
@@ -95,23 +96,12 @@ const ProfileForm = ({ setIsProfileComplete }) => {
             <div className="bg-white p-6 rounded-lg shadow-md w-96">
                 <h2 className="text-xl font-semibold text-center mb-4">Please fill out your profile</h2>
 
-                {/* Profile Picture Upload */}
-                <div className="flex flex-col">
-                    <label className="block text-sm font-medium mb-4">Profile Picture</label>
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 border-2 border-gray-300 rounded-full flex items-center justify-center overflow-hidden bg-gray-100 mb-4">
-                        {profilePicture ? (
-                            <img src={URL.createObjectURL(profilePicture)} alt="Profile" className="w-full h-full object-cover" />
-                        ) : (
-                            <span className="text-gray-400 text-xs md:text-sm">No Image</span>
-                        )}
+                {errorMessage && (
+                    <div className="bg-red-100 text-red-700 p-2 rounded mb-4">
+                        {errorMessage}
                     </div>
-                    <label className="cursor-pointer bg-blue-600 text-white mb-4 px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-blue-700 transition text-sm sm:text-base">
-                        Upload Image
-                        <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                    </label>
-                </div>
+                )}
 
-                {/* Profile Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <input
                         type="text"
@@ -119,6 +109,14 @@ const ProfileForm = ({ setIsProfileComplete }) => {
                         className="w-full p-2 border rounded-lg"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        required
+                    />
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        className="w-full p-2 border rounded-lg"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                     />
                     <input

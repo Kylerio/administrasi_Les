@@ -1,61 +1,48 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import API_URL from '../api'; // Ensure this points to the correct API URL
+import API_URL from '../api'; // Ensure this points to the correct API endpoint
 
 const Login = ({ setIsLoggedIn, setRole }) => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
+    const [email, setEmail] = useState(""); // User email
+    const [password, setPassword] = useState(""); // User password
+    const [error, setError] = useState(""); // Error message
 
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        console.log("Login button clicked");
         setError("");
 
-        // Basic validation
+        // Basic input validation
         if (!email || !password) {
             setError("Email and password are required.");
             return;
         }
 
         try {
-            const response = await axios.post(`${API_URL}/login.php`, {
-                email,
-                password,
-            });
+            const response = await axios.post(`${API_URL}/login.php`, { email, password });
             console.log("Login Response:", response.data);
 
             if (response.data.message === "Login successful") {
-                // Store relevant user data in localStorage
-                localStorage.setItem("id", response.data.teacher_id); // Store the ID
+                // Save user data in localStorage
+                localStorage.setItem("id", response.data.teacher_id); // Store the teacher ID
                 localStorage.setItem("email", response.data.email);   // Store the email
-                localStorage.setItem("token", response.data.token);   // Store the authentication token
                 localStorage.setItem("role", response.data.role);     // Store the user role
-                localStorage.setItem("isProfileComplete", response.data.isProfileComplete); // Store the profile completion status
+                localStorage.setItem("token", response.data.token);   // Store the authentication token
 
-                // Update React state
+                // Update application state
                 setIsLoggedIn(true);
                 setRole(response.data.role);
 
-                console.log("Login is successful!");
-                console.log("ID:", response.data.teacher_id);
-                console.log("Email:", response.data.email);
-                console.log("Role:", response.data.role);
-                console.log("Profile complete:", response.data.isProfileComplete);
-
-                // Redirect based on role
-                if (response.data.role === 'teacher') {
-                    console.log("Navigating to /profileForm");
-                    navigate("/profileForm"); // Redirect teacher to profile form
-                } else if (response.data.role === 'admin') {
-                    console.log("Navigating to /admin");
-                    navigate('/admin'); // Redirect admin to admin dashboard
+                // Redirect to the teacher dashboard
+                if (response.data.role === "teacher") {
+                    navigate("/teacher"); // Redirect teachers to their dashboard
+                } else if (response.data.role === "admin") {
+                    navigate("/admin"); // Redirect admins to admin dashboard
                 }
             } else {
-                // Display error message from the server
+                // Handle login failure
                 setError(response.data.message || "Login failed. Please check your credentials.");
             }
         } catch (error) {
@@ -81,6 +68,7 @@ const Login = ({ setIsLoggedIn, setRole }) => {
                             className="w-full p-2 border rounded-lg"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter your email"
                             required
                         />
                     </div>
@@ -92,6 +80,7 @@ const Login = ({ setIsLoggedIn, setRole }) => {
                             className="w-full p-2 border rounded-lg"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter your password"
                             required
                         />
                     </div>

@@ -20,7 +20,7 @@ const AdminSidebar = () => {
             {/* Logo */}
             <div className='flex items-center justify-around'>
                 <img src={Logo} alt="logo" className='w-16'/>
-                <h1 className='text-lg hidden md:flex'>Admin Panel</h1>
+                <h1 className='text-lg hidden md:flex'>TUTOR EASE ADMIN</h1>
             </div>
 
 

@@ -1,6 +1,10 @@
-import React, { use, useEffect, useState } from 'react'
-import MapDisplay from '../components/MapDisplay'
-import TeacherList from '../components/TeacherList'
+import React, { useEffect, useState } from 'react';
+// import L from 'leaflet';
+// import 'leaflet/dist/leaflet.css';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import TeacherList from '../components/TeacherList';
+import API_URL from '../api';
 
 const CreateSession = () => {
   const [student, setStudent] = useState({
@@ -12,25 +16,18 @@ const CreateSession = () => {
     startTime: '10:00',
     duration: '1',
     fee: ''
-  })
+  });
 
-  // Opsi pilihan hari dalam seminggu
   const daysOptions = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-  // Opsi pilihan start time
   const startTimes = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
-
-  // Opsi pilihan durasi
   const durations = ["1", "2", "3"];
 
   const [sessionDates, setSessionDates] = useState([]);
+  const [locationCoords, setLocationCoords] = useState(null);
+  const [teacher, setTeacher] = useState([]);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [session, setSession] = useState([]);
 
-  const [locationCoords, setLocationCoords] = useState(null)
-  const [teacher, setTeacher] = useState([])
-  const [selectedTeacher, setSelectedTeacher] = useState(null)
-  const [session, setSession] = useState([])
-
-  // Fungsi untuk menghandle perubahan checkbox hari
   const handleDayChange = (day) => {
     setStudent((prev) => {
       const updatedDays = prev.days.includes(day)
@@ -42,7 +39,6 @@ const CreateSession = () => {
     });
   };
 
-  // Fungsi untuk generate daftar tanggal sesi
   const generateSessionDates = (startDate, selectedDays) => {
     if (!startDate || selectedDays.length === 0) return [];
 
@@ -50,16 +46,14 @@ const CreateSession = () => {
     const start = new Date(startDate);
     const dayIndexes = selectedDays.map(day => daysOptions.indexOf(day));
 
-    
-
-    for (let i = 0; i < 4; i++) { // Misal, buat sesi selama 4 minggu
+    for (let i = 0; i < 4; i++) {
       dayIndexes.forEach((dayIndex) => {
         let newDate = new Date(start);
         let offset = (dayIndex + 1 - start.getDay() + 7) % 7;
 
-        if(offset === 0 && i === 0) {
+        if (offset === 0 && i === 0) {
           sessionDates.push(newDate.toISOString().split("T")[0]);
-        } else{
+        } else {
           newDate.setDate(start.getDate() + offset + (i * 7));
           sessionDates.push(newDate.toISOString().split("T")[0]);
         }
@@ -68,142 +62,260 @@ const CreateSession = () => {
     return sessionDates.sort();
   };
 
-  // Handle perubahan tanggal sesi pertama
   const handleDateChange = (e) => {
     const newDate = e.target.value;
     setStudent(prev => ({ ...prev, date: newDate }));
     setSessionDates(generateSessionDates(newDate, student.days));
   };
 
-  // Format angka IDR saat mengetik
   const formatCurrency = (value) => {
     if (!value) return "";
-    const number = value.replace(/\D/g, ""); // Hanya ambil angka
+    const number = value.replace(/\D/g, "");
     return new Intl.NumberFormat("id-ID").format(number);
   };
-  
+
   const handleFeeChange = (e) => {
-    const rawValue = e.target.value.replace(/\D/g, ""); // Ambil angka saja
+    const rawValue = e.target.value.replace(/\D/g, "");
     setStudent({ ...student, fee: rawValue });
   };
 
-  // mengambil data session jika ada
   useEffect(() => {
-    const storedSchedules = JSON.parse(localStorage.getItem('session')) || []
-    setSession(storedSchedules)
-  }, [])
+    const storedSchedules = JSON.parse(localStorage.getItem("session")) || [];
+    const normalizedSchedules = storedSchedules.map((session) => ({
+      ...session,
+      days: Array.isArray(session.days)
+        ? session.days
+        : typeof session.days === "string"
+        ? session.days.split(", ")
+        : [], // Default to an empty array if `days` is undefined or invalid
+    }));
+    setSession(normalizedSchedules);
+  }, []);
 
-  // fungsi Haversine (menghitung jarak antara dua titik koordinat)
   const getDistance = (lat1, lon1, lat2, lon2) => {
-    const toRad = (angle) => (angle * Math.PI) / 180
-    const dLat = toRad(lat2 - lat1)
-    const dLon = toRad(lon2 - lon1)
-    const R = 6371
+    const toRad = (angle) => (angle * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const R = 6371;
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
               Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-    return R * c
-  }
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
-  // fungsi mencari pengajar terdekat
-  const handleFindTeacher = () => {
-    if(!student.location || !student.subject || !student.days) {
-      alert('Please fill in the form')
-      return
+  const getCoordinates = async (address) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+      );
+      const data = await response.json();
+
+      if (data.length > 0) {
+        const { lat, lon } = data[0];
+        setLocationCoords({ latitude: parseFloat(lat), longitude: parseFloat(lon) });
+        return { latitude: parseFloat(lat), longitude: parseFloat(lon) };
+      } else {
+        alert("Failed to get location coordinates. Please check the address.");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error fetching coordinates:", error);
+      alert("An error occurred while fetching location coordinates.");
+      return null;
+    }
+  };
+
+  const handleFindTeacher = async () => {
+    if (!student.location || !student.subject || !student.days) {
+      alert('Please fill in the form');
+      return;
     }
 
-    //uji coba pake data
-    const mockLocation = {
-      latitude: -6.200000,
-      longitude: 106.816666
-    }
-    setLocationCoords(mockLocation)
+    const coords = await getCoordinates(student.location);
+console.log('Student Coordinates:', coords);
+if (!coords) return;
 
-    const allTeacher = [
-      {
-        name: 'Budi',
-        subject: 'Math',
-        location: { latitude: -6.202393, longitude: 106.815978 },
-        availableDays: ['Monday', 'Wednesday']
-      },
-      {
-        name: 'Rimuru',
-        subject: 'English',
-        location: { latitude: -6.201111, longitude: 106.817111 },
-        availableDays: ['Tuesday', 'Thursday']
-      },
-      {
-        name: 'Rain',
-        subject: 'Biology',
-        location: { latitude: -6.250000, longitude: 106.860000 },
-        availableDays: ['Friday', 'Wednesday']
-      },
-      {
-        name: 'Meliodas',
-        subject: 'Physics',
-        location: { latitude: -6.230000, longitude: 106.840000 },
-        availableDays: ['Monday', 'Thursday']
-      },
-    ]
+    try {
+      // Fetch teacher data from the API
+      const response = await fetch(`${API_URL}/fetchTeachers.php`);
+      const teachers = await response.json();
 
-    console.log("student location: ", student.location)
+      if (!response.ok) {
+        throw new Error('Failed to fetch teachers');
+      }
 
-    // data semua pengajar di filter dari jarak, subject, days
-    const filteredTeacher = allTeacher
-      .map(teacher => ({
-        ...teacher,
-        distance: getDistance(mockLocation.latitude, mockLocation.longitude, teacher.location.latitude, teacher.location.longitude)
-      }))
-      .filter(teacher => 
-        teacher.distance <= 10 &&
-        teacher.subject.toLowerCase() === student.subject.toLowerCase() &&
-        teacher.availableDays.includes(student.days)
-      )
-      .sort((a, b) => a.distance - b.distance)
+      // Parse teacher data and filter based on criteria
+      const filteredTeacher = teachers
+  .map((teacher) => {
+    const distance = getDistance(
+      coords.latitude,
+      coords.longitude,
+      parseFloat(teacher.latitude),
+      parseFloat(teacher.longitude)
+    );
 
-    console.log("filtered teacher: ", filteredTeacher)
+    console.log(`Teacher: ${teacher.name}, Distance: ${distance}, Subject: ${teacher.subject}, Availability: ${teacher.availability}`);
 
-    setTeacher(filteredTeacher)
-  }
-
-  // Simpan Jadwal ke LocalStorage
-  const saveSessionToLocalStorage = (teacher) => {
-    const newSession = {
-        studentName: student.name,
-        studentLocation: student.location,
-        subject: student.subject,
-        days: student.days,
-        date: student.date,
-        startTime: student.startTime,
-        duration: student.duration,
-        fee: student.fee,
-        teacherName: teacher.name,
-        teacherLocation: teacher.location,
+    return {
+      ...teacher,
+      distance,
     };
+  })
+  .filter((teacher) => {
+    const matchesSubject = teacher.subject.toLowerCase() === student.subject.toLowerCase();
+    const matchesAvailability = teacher.availability.split(', ').some((day) => student.days.includes(day));
 
-    // Ambil jadwal lama dari localStorage
-    const updatedSchedules = [...session, newSession];
+    console.log(`Matches Subject: ${matchesSubject}, Matches Availability: ${matchesAvailability}`);
 
-    // Simpan kembali ke localStorage
-    localStorage.setItem("session", JSON.stringify(updatedSchedules));
+    return teacher.distance <= 10 && matchesSubject && matchesAvailability;
+  })
+  .sort((a, b) => a.distance - b.distance);
 
-    // Update state agar tampilan berubah
-    setSession(updatedSchedules);
-    setSelectedTeacher(teacher);
-    alert(`Jadwal berhasil disimpan! Pengajar: ${teacher.name}`);
+      console.log('Filtered teachers:', filteredTeacher);
+
+      setTeacher(filteredTeacher);
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+      alert('Failed to find teachers. Please try again later.');
+    }
   };
+
+  const fetchSchedules = async () => {
+    try {
+      const response = await fetch(`${API_URL}/fetchSchedules.php`);
+      const data = await response.json();
   
-  // Assign Pengajar
-  const handleAssignTeacher = (teacher) => {
-    saveSessionToLocalStorage(teacher);
+      // Normalize the `day_of_week` field to always be an array
+      const normalizedSchedules = data.map((session) => ({
+        ...session,
+        day_of_week: typeof session.day_of_week === "string"
+        ? session.day_of_week.split(", ")
+        : Array.isArray(session.day_of_week)
+          ? session.day_of_week
+          : [], // Default to an empty array if `day_of_week` is undefined or invalid
+      }));
+  
+      setSession(normalizedSchedules); // Update the session state with fetched schedules
+    } catch (error) {
+      console.error("Error fetching schedules:", error);
+    }
   };
 
-  //handle delete saved schedule
-  const handleDeleteSchedule = (index) => {
-    const updatedSchedules = session.filter((_, i) => i !== index);
-    setSession(updatedSchedules);
-    localStorage.setItem("session", JSON.stringify(updatedSchedules));
+  useEffect(() => {
+    fetchSchedules();
+  }, []);
+
+  useEffect(() => {
+    if (locationCoords) {
+      // Initialize the MapLibre map
+      const map = new maplibregl.Map({
+        container: 'map', // The ID of the div where the map will be rendered
+        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json', // OpenStreetMap style
+        center: [locationCoords.longitude, locationCoords.latitude], // Center the map on the student's location
+        zoom: 12,
+      });
+
+      // Add a marker for the student's location
+      new maplibregl.Marker({ color: 'blue' })
+        .setLngLat([locationCoords.longitude, locationCoords.latitude])
+        .setPopup(new maplibregl.Popup().setHTML('<b>Student Location</b>'))
+        .addTo(map);
+
+      // Add markers for each teacher
+      teacher.forEach((t) => {
+        new maplibregl.Marker({ color: 'red' })
+          .setLngLat([t.longitude, t.latitude])
+          .setPopup(
+            new maplibregl.Popup().setHTML(
+              `<b>Teacher: ${t.name}</b><br>Subject: ${t.subject}<br>Distance: ${t.distance.toFixed(2)} km`
+            )
+          )
+          .addTo(map);
+      });
+
+      // Cleanup the map when the component unmounts
+      return () => {
+        map.remove();
+      };
+    }
+  }, [locationCoords, teacher]);
+
+
+  const saveSessionToDatabase = async (teacher) => {
+    const newSession = {
+      studentName: student.name,
+      studentLocation: student.location,
+      subject: student.subject,
+      days: student.days.join(", "),
+      date: student.date,
+      startTime: student.startTime,
+      duration: student.duration,
+      fee: student.fee,
+      teacherName: teacher.name,
+      teacherLocation: teacher.location,
+    };
+  
+    try {
+      const response = await fetch(`${API_URL}/createSchedule.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newSession),
+      });
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error Response:", errorText);
+        throw new Error("Failed to save session to the database");
+      }
+  
+      const result = await response.json();
+      if (result.success) {
+        alert(`Schedule saved successfully! Teacher: ${teacher.name}`);
+        fetchSchedules(); // Refresh schedules after saving
+      } else {
+        alert("Failed to save session to the database");
+      }
+    } catch (error) {
+      console.error("Error saving session:", error);
+      alert("An error occurred while saving the session. Please try again.");
+    }
+  };
+
+  const handleAssignTeacher = (teacher) => {
+    saveSessionToDatabase(teacher);
+  };
+
+  
+  const handleDeleteSchedule = async (index) => {
+    const scheduleToDelete = session[index]; // Get the schedule to delete
+  
+    try {
+      const response = await fetch(`${API_URL}/deleteSchedule.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ schedule_id: scheduleToDelete.schedule_id }), // Send the schedule ID
+      });
+  
+      const result = await response.json();
+      if (result.success) {
+        alert("Schedule deleted successfully!");
+  
+        // Remove the schedule from the frontend state
+        const updatedSchedules = session.filter((_, i) => i !== index);
+        setSession(updatedSchedules);
+        localStorage.setItem("session", JSON.stringify(updatedSchedules)); // Update localStorage
+      } else {
+        alert("Failed to delete schedule: " + result.message);
+      }
+    } catch (error) {
+      console.error("Error deleting schedule:", error);
+      alert("An error occurred while deleting the schedule. Please try again.");
+    }
   };
 
   return (
@@ -213,22 +325,20 @@ const CreateSession = () => {
         <h2 className="text-xl font-semibold mb-4">Create a New Schedule</h2>
 
         <div className="space-y-4">
-          {/* Input Nama, Lokasi, dan Subject */}
           {["name", "location", "subject"].map((field) => (
             <div key={field}>
               <label className="block text-sm font-medium capitalize">{field}</label>
-                <input
-                  type="text"
-                  name={field}
-                  value={student[field]}
-                  onChange={(e) => setStudent({ ...student, [field]: e.target.value })}
-                  className="w-full p-2 border rounded-lg"
-                  placeholder={`Input ${field}`}
-                />
+              <input
+                type="text"
+                name={field}
+                value={student[field]}
+                onChange={(e) => setStudent({ ...student, [field]: e.target.value })}
+                className="w-full p-2 border rounded-lg"
+                placeholder={`Input ${field}`}
+              />
             </div>
           ))}
 
-          {/* Input Fee Pengajar */}
           <div>
             <label className="block text-sm font-medium">Fee (per hour)</label>
             <input
@@ -241,7 +351,6 @@ const CreateSession = () => {
             />
           </div>
 
-          {/* Pilihan Hari (Checkbox) */}
           <div>
             <label className="block text-sm font-medium">Select Days</label>
             <div className="flex flex-wrap gap-2">
@@ -259,7 +368,6 @@ const CreateSession = () => {
             </div>
           </div>
 
-          {/* Input Tanggal Mulai */}
           <div>
             <label className="block text-sm font-medium">Start Date (First Session)</label>
             <input
@@ -272,7 +380,6 @@ const CreateSession = () => {
             />
           </div>
 
-          {/* Menampilkan daftar sesi yang dihasilkan */}
           {sessionDates.length > 0 && (
             <div className="bg-gray-100 p-3 rounded-md">
               <h3 className="text-sm font-semibold mb-2">Generated Session Dates:</h3>
@@ -284,9 +391,7 @@ const CreateSession = () => {
             </div>
           )}
 
-          {/* Pilihan Start Time dan Duration */}
           <div className="flex space-x-4">
-            {/* Start Time */}
             <div className="flex-1">
               <label className="block text-sm font-medium">Start Time</label>
               <select
@@ -303,7 +408,6 @@ const CreateSession = () => {
               </select>
             </div>
 
-            {/* Duration */}
             <div className="flex-1">
               <label className="block text-sm font-medium">Duration (Hours)</label>
               <select
@@ -329,18 +433,19 @@ const CreateSession = () => {
         </div>
       </div>
       
-      {/* Map Display */}
       <div className="p-4 bg-white rounded-lg shadow-md">
-        <h2 className='text-lg font-semibold mb-2'>Map</h2>
-        {locationCoords && <MapDisplay location={locationCoords} teacher={teacher} />}
+        <h2 className="text-lg font-semibold mb-2">Map</h2>
+        {locationCoords ? (
+          <div id="map" style={{ height: '400px', width: '100%' }}></div>
+        ) : (
+          <p className="text-gray-500">Map will display here once the location is set.</p>
+        )}
       </div>
 
-      {/* Teacher List */}
       <div className="bg-white p-6 rounded-lg shadow-md">
         <TeacherList teacher={teacher} onAssign={handleAssignTeacher} />
       </div>
 
-      {/* Jadwal yang Sudah Dibuat */}
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h3 className="text-lg font-semibold text-center">Saved Schedules</h3>
         {session.length > 0 ? (
@@ -356,29 +461,42 @@ const CreateSession = () => {
                     <th className="border p-2">Date</th>
                     <th className="border p-2">Time</th>
                     <th className="border p-2">Duration</th>
+                    <th className="border p-2">Fee</th>
                     <th className="border p-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {session.map((session, index) => (
-                    <tr key={index} className="border">
-                      <td className="border p-2">{session.studentName}</td>
-                      <td className="border p-2">{session.subject}</td>
-                      <td className="border p-2">{session.teacherName}</td>
-                      <td className="border p-2">{session.days.join(", ")}</td>
-                      <td className="border p-2">{session.date}</td>
-                      <td className="border p-2">{session.startTime}</td>
-                      <td className="border p-2">{session.duration} hours</td>
-                      <td className="border p-2">
-                        <button
-                          onClick={() => handleDeleteSchedule(index)}
-                          className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                {console.log("Session state:", session)}
+                {session.map((session, index) => {
+    // Ensure `days` is an array
+    const daysArray = Array.isArray(session.day_of_week)
+      ? session.day_of_week
+      : []; // Default to an empty array if `days` is undefined or invalid
+
+    return (
+      <tr key={index} className="border">
+        <td className="border p-2">{session.studentName || session.student_name}</td>
+        <td className="border p-2">{session.subject}</td>
+        <td className="border p-2">{session.teacherName || session.teacher_name}</td>
+        <td className="border p-2">{daysArray.join(", ")}</td>
+        <td className="border p-2">{session.date}</td>
+        <td className="border p-2">{session.start_time}</td>
+        <td className="border p-2">{session.duration} hours</td>
+        <td className="border p-2">
+          {new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+          }).format(session.fee)}
+            </td>
+          <button
+            onClick={() => handleDeleteSchedule(index)}
+            className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+          >
+            Delete
+          </button>
+      </tr>
+    );
+  })}
                 </tbody>
               </table>
             </div>
@@ -388,7 +506,7 @@ const CreateSession = () => {
         )}
       </div> 
     </div>
-  )
-}
+  );
+};
 
-export default CreateSession
+export default CreateSession;
