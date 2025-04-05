@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API_URL from "../api";
 
 const Profile = () => {
   const [profile, setProfile] = useState(null); // Store profile data
@@ -21,7 +22,7 @@ const Profile = () => {
         console.log("Fetching profile for Teacher ID:", teacherId);
 
         const response = await fetch(
-          `http://localhost/administrasi_les_api/teachers.php?teacher_id=${teacherId}`,
+          `${API_URL}/teachers.php?teacher_id=${teacherId}`,
           {
             method: "GET",
             headers: {
@@ -41,7 +42,7 @@ const Profile = () => {
           setProfile(data[0]);
           console.log("Profile fetched successfully:", data[0]);
         } else {
-          setError("No profile data found for this teacher.");
+          throw new Error("No profile data found for this teacher.");
         }
       } catch (err) {
         console.error("Error fetching profile:", err.message);
@@ -69,7 +70,7 @@ const Profile = () => {
             <img
               src={
                 profile.profile_picture
-                  ? `http://localhost/administrasi_les_api/uploads/${profile.profile_picture}`
+                  ? `${API_URL}/${profile.profile_picture}`
                   : "https://randomuser.me/api/portraits/lego/3.jpg"
               }
               alt="Profile"

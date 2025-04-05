@@ -41,12 +41,25 @@ const Schedule = () => {
   const filteredSchedules =
     filter === "all" ? schedules : schedules.filter((s) => s.status === filter);
 
-  // Function to verify attendance (change status to "Completed")
-  const handleVerifyAttendance = (id) => {
-    const updatedSchedules = schedules.map((schedule) =>
-      schedule.id === id ? { ...schedule, status: "Completed" } : schedule
-    );
-    setSchedules(updatedSchedules);
+  // Function to verify attendance (change status to "Verified")
+  const handleVerifyAttendance = async (id) => {
+    try {
+      const response = await axios.post(`${API_URL}/updateScheduleStatus.php`, {
+        schedule_id: id,
+      });
+
+      if (response.data.success) {
+        // Update the status in the frontend
+        const updatedSchedules = schedules.map((schedule) =>
+          schedule.id === id ? { ...schedule, status: "Verified" } : schedule
+        );
+        setSchedules(updatedSchedules);
+      } else {
+        console.error("Failed to update schedule status:", response.data.message);
+      }
+    } catch (err) {
+      console.error("Error updating schedule status:", err);
+    }
   };
 
   return (
@@ -61,8 +74,8 @@ const Schedule = () => {
           onChange={(e) => setFilter(e.target.value)}
         >
           <option value="all">All Schedules</option>
-          <option value="Verified">Already Verified</option>
-          <option value="Pending">Not Verified</option>
+          <option value="Verified">Verified</option>
+          <option value="Pending">Pending</option>
         </select>
       </div>
 
@@ -93,15 +106,13 @@ const Schedule = () => {
                     className={`p-2 font-semibold ${
                       schedule.status === "Verified"
                         ? "text-green-600"
-                        : schedule.status === "Completed"
-                        ? "text-gray-600"
                         : "text-red-500"
                     }`}
                   >
                     {schedule.status}
                   </td>
                   <td className="p-2">
-                    {schedule.status === "Verified" && (
+                    {schedule.status === "Pending" && (
                       <button
                         onClick={() => handleVerifyAttendance(schedule.id)}
                         className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
@@ -114,10 +125,7 @@ const Schedule = () => {
               ))
             ) : (
               <tr>
-                <td
-                  colSpan="7"
-                  className="p-4 text-center text-gray-500"
-                >
+                <td colSpan="7" className="p-4 text-center text-gray-500">
                   No schedule available yet.
                 </td>
               </tr>
@@ -153,14 +161,12 @@ const Schedule = () => {
                 className={`font-semibold ${
                   schedule.status === "Verified"
                     ? "text-green-600"
-                    : schedule.status === "Completed"
-                    ? "text-gray-600"
                     : "text-red-500"
                 }`}
               >
                 <strong>Status:</strong> {schedule.status}
               </p>
-              {schedule.status === "Verified" && (
+              {schedule.status === "Pending" && (
                 <button
                   onClick={() => handleVerifyAttendance(schedule.id)}
                   className="w-full mt-2 px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
