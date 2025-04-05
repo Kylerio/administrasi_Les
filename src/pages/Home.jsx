@@ -11,49 +11,47 @@ const Home = () => {
   useEffect(() => {
     const fetchProfileAndSchedules = async () => {
       try {
-        // Retrieve teacher ID and email from localStorage
         const teacherId = localStorage.getItem("id");
         const email = localStorage.getItem("email");
-    
+  
         console.log("Teacher ID:", teacherId);
         console.log("Email:", email);
-    
+  
         if (!teacherId || !email) {
           setError("No teacher ID or email found. Please log in again.");
           return;
         }
-    
-        // Fetch teacher profile from the backend
+  
+        // Fetch teacher profile
         const profileResponse = await axios.post(`${API_URL}/getProfile.php`, {
           teacher_id: teacherId,
           email: email,
         });
-    
+  
         console.log("Profile API Response:", profileResponse.data);
-    
+  
         if (profileResponse.data.message === "Profile fetched successfully") {
-          setTeacher(profileResponse.data.profile); // Set profile data
+          setTeacher(profileResponse.data.profile);
         } else {
           setError(profileResponse.data.message || "Failed to fetch profile.");
         }
-    
-        // Fetch schedules for the teacher
+  
+        // Fetch schedules
         const scheduleResponse = await axios.post(`${API_URL}/getSchedules.php`, {
           teacher_id: teacherId,
         });
-    
+  
         console.log("Schedules API Response:", scheduleResponse.data);
-    
+  
         if (scheduleResponse.data.message === "Schedules fetched successfully") {
-          // Map the schedules to match the frontend structure
           const mappedSchedules = scheduleResponse.data.schedules.map((schedule) => ({
             day: schedule.day_of_week || "No Day",
             start_time: schedule.start_time || "No Start Time",
             duration: `${schedule.duration} hour${schedule.duration > 1 ? "s" : ""}`,
             subject: schedule.subject || "No Subject",
             student: schedule.student || `Student ID: ${schedule.student_id}`,
-            fee: parseFloat(schedule.fee) || 0, // Parse fee as a number
-            status: schedule.status || "Pending", // Include status
+            fee: parseFloat(schedule.fee) || 0,
+            status: schedule.status || "Pending",
           }));
           setSchedules(mappedSchedules);
         } else {
@@ -64,6 +62,7 @@ const Home = () => {
         setError("An error occurred while fetching data.");
       }
     };
+  
     fetchProfileAndSchedules();
   }, []);
 
@@ -87,19 +86,20 @@ const sessionsPending = schedules.filter((schedule) => schedule.status === "Pend
     return <p className="text-center">Loading profile...</p>;
   }
 
+  console.log("API_URL:", API_URL);
   return (
     <div className="p-6">
       {/* Profile in Dashboard */}
       <div className="flex items-center space-x-4 bg-white p-4 md:p-6 rounded-lg shadow-md">
       <img
-          src={
-            teacher.profile_picture
-              ? `${API_URL}/uploads/${teacher.profile_picture}`
-              : "https://randomuser.me/api/portraits/lego/3.jpg"
-          }
-          alt="Profile Picture"
-          className="w-24 h-24 rounded-full"
-        />
+  src={
+    teacher.profile_picture
+      ? `${API_URL}/${teacher.profile_picture}`
+      : "https://randomuser.me/api/portraits/lego/3.jpg"
+  }
+  alt="Profile Picture"
+  className="w-24 h-24 rounded-full"
+/>
         <div>
           <h2 className="text-lg font-semibold">Welcome Back, {teacher.name}!</h2>
           <p className="text-sm text-gray-500">
