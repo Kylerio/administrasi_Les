@@ -23,8 +23,20 @@ const Schedule = () => {
           teacher_id: teacherId,
         });
 
-        if (response.data.success) {
-          setSchedules(response.data.schedules); // Set schedules data
+        console.log("Schedules API Response:", response.data);
+
+        if (response.data.message === "Schedules fetched successfully") {
+          // Map the schedules to ensure proper structure
+          const mappedSchedules = response.data.schedules.map((schedule) => ({
+            id: schedule.schedule_id,
+            date: schedule.date,
+            startTime: schedule.start_time, // Map start_time correctly
+            duration: `${schedule.duration} hour${schedule.duration > 1 ? "s" : ""}`,
+            student: schedule.student || "Unknown Student",
+            location: schedule.location || "No Location",
+            status: schedule.status || "Pending",
+          }));
+          setSchedules(mappedSchedules);
         } else {
           setError(response.data.message || "Failed to fetch schedules.");
         }
@@ -98,7 +110,7 @@ const Schedule = () => {
               filteredSchedules.map((schedule) => (
                 <tr key={schedule.id} className="text-center border-t">
                   <td className="p-2">{schedule.date}</td>
-                  <td className="p-2">{schedule.startTime}</td>
+                  <td className="p-2">{schedule.startTime}</td> {/* Display start_time */}
                   <td className="p-2">{schedule.duration}</td>
                   <td className="p-2">{schedule.student}</td>
                   <td className="p-2">{schedule.location}</td>
@@ -146,7 +158,7 @@ const Schedule = () => {
                 <strong>Date:</strong> {schedule.date}
               </p>
               <p>
-                <strong>Start Time:</strong> {schedule.startTime}
+                <strong>Start Time:</strong> {schedule.startTime} {/* Display start_time */}
               </p>
               <p>
                 <strong>Duration:</strong> {schedule.duration}
