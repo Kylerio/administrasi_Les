@@ -5,16 +5,55 @@ import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate for 
 import { GoBell } from "react-icons/go";
 import { FiLogOut, FiMenu } from "react-icons/fi";
 
+import API_URL from "../api"; // Import the base API URL
+
 const Header = () => {
     const [showDropDown, setShowDropDown] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
-    const [profile, setProfile] = useState(null);
+    const [profile, setProfile] = useState(null); // Profile data
     const navigate = useNavigate(); // Initialize useNavigate for navigation
 
     useEffect(() => {
-        const savedProfile = JSON.parse(localStorage.getItem("userProfile"));
-        if (savedProfile) setProfile(savedProfile);
-    }, []);
+        // Retrieve the teacher ID and email from localStorage
+        const teacherId = localStorage.getItem("id");
+        const email = localStorage.getItem("email");
+
+        if (teacherId && email) {
+            // Fetch the teacher's profile from the database using the getProfile.php API
+            const fetchProfile = async () => {
+                try {
+                    const response = await fetch(`${API_URL}/getProfile.php`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ teacher_id: teacherId, email }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch profile data. Please check the backend.");
+                    }
+
+                    const data = await response.json();
+
+                    if (data.profile) {
+                        setProfile({
+                            name: data.profile.name,
+                            profilePicture: data.profile.profile_picture
+                                ? `${API_URL}/${data.profile.profile_picture}` // Construct full path for profile picture
+                                : "https://randomuser.me/api/portraits/lego/3.jpg", // Default profile picture
+                        });
+                    } else {
+                        throw new Error(data.message || "No profile data found.");
+                    }
+                } catch (error) {
+                    console.error("Error fetching profile data:", error.message);
+                }
+            };
+
+            fetchProfile();
+        }
+    }, []); // Runs once when the component mounts
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -29,14 +68,13 @@ const Header = () => {
 
     return (
         <div className='flex justify-between items-center p-4'>
-            {/* Waktu & Tanggal */}
+            {/* Current Date & Time */}
             <div className='text-md text-gray-600'>
                 {currentTime.toLocaleDateString()} - {currentTime.toLocaleTimeString()}
             </div>
 
-            {/* Menu */}
+            {/* Profile Menu */}
             <div className='flex items-center space-x-5'>
-                {/* Profile */}
                 <div>
                     <img
                         onClick={() => setShowDropDown(!showDropDown)}

@@ -11,6 +11,7 @@ import CreateSession from "./adminpages/CreateSession"
 import ViewDataTeacher from "./adminpages/ViewDataTeacher"
 import AdminLayout from "./components/AdminLayout"
 import ViewListFee from "./adminpages/ViewListFee"
+import VerifyAttendance from "./adminpages/VerifyAttendance"
 
 
 function App() {
@@ -43,18 +44,19 @@ function App() {
         
         {/* side teacher */}
         <Route path="/teacher" element={isLoggedIn && role === "teacher" ? <Layout /> : <Navigate to="/login" />}>
-          <Route index element={isProfileComplete ? <Home /> : <Navigate to="/teacher" />} />
+          <Route index element={<Home />} />
           <Route path="schedule" element={<Schedule />} />
           <Route path="profile" element={<Profile />} />
           <Route path="profile/edit" element={<ProfileForm />} />
           <Route path="fee" element={<Fee />} />
-        </Route>
+        </Route>
 
         {/* side admin */}
         <Route path="/admin" element={isLoggedIn && role === "admin" ? <AdminLayout /> : <Navigate to="/login" />}>
           <Route index element={<CreateSession />} />
           <Route path="viewDataTeacher" element={<ViewDataTeacher />} />
           <Route path="viewListFee" element={<ViewListFee />} />
+          <Route path="verifyAttendance" element={<VerifyAttendance />} />
         </Route>
 
         {/* jika belum login, arahkan ke halaman login */}

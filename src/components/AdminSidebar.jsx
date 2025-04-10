@@ -14,6 +14,7 @@ const AdminSidebar = () => {
         { id: 1, path:"/admin", name: "Create Session", icon: PiChalkboardFill},
         { id: 2, path:"/admin/viewDataTeacher", name: "View Data Teacher", icon: PiUserListFill},
         { id: 3, path:"/admin/viewListFee", name: "View List Fee", icon: RiFileList3Fill},
+        { id: 4, path:"/admin/verifyAttendance", name: "Verify Attendance"},
     ]
   return (
     <div className='w-16 md:w-56 fixed left-0 top-0 z-10 h-screen border-r pt-8 px-4 bg-[#ffffff]'>

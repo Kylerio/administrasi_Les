@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import API_URL from "../api";
 
 const VerifyAttendance = () => {
   const [attendanceData, setAttendanceData] = useState([]);
@@ -9,22 +10,35 @@ const VerifyAttendance = () => {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState("");
 
+  // Fetch attendance data with required query parameters
+  const fetchAttendanceData = async () => {
+    try {
+      // Optionally, provide default parameters when filters are empty.
+      // For example, you might want to fetch records for the current month and a default teacher.
+      const teacherParam = selectedTeacher ? selectedTeacher : "all"; 
+      // Default to current month (as number string) if no month is selected.
+      const currentMonth = new Date().getMonth() + 1; 
+      const monthParam = selectedMonth ? selectedMonth : currentMonth.toString();
+
+      const response = await axios.get(`${API_URL}/getAttendanceReport.php`, {
+        params: { teacher: teacherParam, month: monthParam },
+      });
+      setAttendanceData(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Error fetching data", error);
+      setAttendanceData([]); // Reset data on error
+    }
+  };
+
+  // Refetch data whenever selected filters change
   useEffect(() => {
     fetchAttendanceData();
-  }, []);
+  }, [selectedMonth, selectedTeacher]);
 
+  // Further client-side filtering (if needed) based on the filters
   useEffect(() => {
     filterData();
   }, [attendanceData, selectedMonth, selectedTeacher]);
-
-  const fetchAttendanceData = async () => {
-    try {
-      const response = await axios.get("http://localhost/api/getAttendanceData.php");
-      setAttendanceData(response.data);
-    } catch (error) {
-      console.error("Error fetching data", error);
-    }
-  };
 
   const filterData = () => {
     let filtered = attendanceData;
@@ -45,12 +59,15 @@ const VerifyAttendance = () => {
   };
 
   const calculateTotalFee = () => {
-    return filteredData.reduce((acc, item) => acc + parseFloat(item.fee), 0);
+    return Array.isArray(filteredData)
+      ? filteredData.reduce((acc, item) => acc + parseFloat(item.fee || 0), 0)
+      : 0;
   };
 
   const handleVerify = async (id) => {
     try {
       await axios.post("http://localhost/api/verifyAttendanceByAdmin.php", { id });
+      // Re-fetch the data after successful verification
       fetchAttendanceData();
     } catch (error) {
       console.error("Failed to verify", error);
@@ -70,7 +87,6 @@ const VerifyAttendance = () => {
         item.status,
       ]),
     });
-
     doc.text(`Total Fee: Rp ${calculateTotalFee()}`, 14, doc.lastAutoTable.finalY + 10);
     doc.save("attendance_report.pdf");
   };
@@ -115,25 +131,33 @@ const VerifyAttendance = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((item) => (
-              <tr key={item.id}>
-                <td className="p-2 border">{item.date}</td>
-                <td className="p-2 border">{item.teacher_name}</td>
-                <td className="p-2 border">{item.hours}</td>
-                <td className="p-2 border">Rp {item.fee}</td>
-                <td className="p-2 border">{item.status}</td>
-                <td className="p-2 border">
-                  {item.status !== "Verified" && (
-                    <button
-                      onClick={() => handleVerify(item.id)}
-                      className="px-2 py-1 bg-green-500 text-white rounded"
-                    >
-                      Verify
-                    </button>
-                  )}
+            {Array.isArray(filteredData) && filteredData.length > 0 ? (
+              filteredData.map((item) => (
+                <tr key={item.id} className="text-center border-t">
+                  <td className="p-2 border">{item.date}</td>
+                  <td className="p-2 border">{item.teacher_name}</td>
+                  <td className="p-2 border">{item.hours}</td>
+                  <td className="p-2 border">Rp {item.fee}</td>
+                  <td className="p-2 border">{item.status}</td>
+                  <td className="p-2 border">
+                    {item.status !== "Verified" && (
+                      <button
+                        onClick={() => handleVerify(item.id)}
+                        className="px-2 py-1 bg-green-500 text-white rounded"
+                      >
+                        Verify
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center p-2">
+                  No data available for the selected filters.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
