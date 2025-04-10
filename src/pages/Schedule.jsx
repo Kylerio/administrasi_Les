@@ -27,15 +27,18 @@ const Schedule = () => {
 
         if (response.data.message === "Schedules fetched successfully") {
           // Map the schedules to ensure proper structure
-          const mappedSchedules = response.data.schedules.map((schedule) => ({
-            id: schedule.schedule_id,
-            date: schedule.date,
-            startTime: schedule.start_time, // Map start_time correctly
-            duration: `${schedule.duration} hour${schedule.duration > 1 ? "s" : ""}`,
-            student: schedule.student || "Unknown Student",
-            location: schedule.location || "No Location",
-            status: schedule.status || "Pending",
-          }));
+          const mappedSchedules = response.data.schedules.map((schedule) => {
+            console.log("Schedule Data:", schedule);
+            return {
+              id: schedule.schedule_id,
+              date: schedule.date,
+              startTime: schedule.start_time, // Map start_time correctly
+              duration: `${schedule.duration} hour${schedule.duration > 1 ? "s" : ""}`,
+              student: schedule.student || "Unknown Student",
+              location: schedule.location || "No Location",
+              status: schedule.status || "Pending",
+            };
+          });
           setSchedules(mappedSchedules);
         } else {
           setError(response.data.message || "Failed to fetch schedules.");
@@ -55,9 +58,12 @@ const Schedule = () => {
 
   // Function to verify attendance (change status to "Verified")
   const handleVerifyAttendance = async (id) => {
+    
     try {
+      console.log(">>> Sending schedule_id:", id);
       const response = await axios.post(`${API_URL}/updateScheduleStatus.php`, {
-        schedule_id: id,
+        schedule_id: id },
+        { headers: { 'Content-Type': 'application/json' }
       });
 
       if (response.data.success) {
@@ -67,6 +73,7 @@ const Schedule = () => {
         );
         setSchedules(updatedSchedules);
       } else {
+        console.log(">>> Sending schedule_id:", id);
         console.error("Failed to update schedule status:", response.data.message);
       }
     } catch (err) {

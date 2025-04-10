@@ -144,10 +144,10 @@ const ProfileForm = () => {
             {profilePicture ? (
               typeof profilePicture === "string" ? (
                 <img
-  src={`${API_URL}/${profilePicture}`}
-  alt="Profile"
-  className="w-full h-full object-cover"
-/>
+                  src={`${API_URL}/${profilePicture}`}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <img
                   src={URL.createObjectURL(profilePicture)}

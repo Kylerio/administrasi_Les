@@ -91,15 +91,15 @@ const sessionsPending = schedules.filter((schedule) => schedule.status === "Pend
     <div className="p-6">
       {/* Profile in Dashboard */}
       <div className="flex items-center space-x-4 bg-white p-4 md:p-6 rounded-lg shadow-md">
-      <img
-  src={
-    teacher.profile_picture
-      ? `${API_URL}/${teacher.profile_picture}`
-      : "https://randomuser.me/api/portraits/lego/3.jpg"
-  }
-  alt="Profile Picture"
-  className="w-24 h-24 rounded-full"
-/>
+        <img
+          src={
+          teacher.profile_picture
+          ? `${API_URL}/${teacher.profile_picture}`
+          : "https://randomuser.me/api/portraits/lego/3.jpg"
+          } // Fallback image if profile picture is not available
+          alt="Profile Picture"
+          className="w-24 h-24 rounded-full"
+        />
         <div>
           <h2 className="text-lg font-semibold">Welcome Back, {teacher.name}!</h2>
           <p className="text-sm text-gray-500">
@@ -159,36 +159,36 @@ const sessionsPending = schedules.filter((schedule) => schedule.status === "Pend
 
       {/* Fee Summary */}
       <div className="mt-6 bg-white p-4 md:p-6 rounded-lg shadow-md">
-  <h2 className="text-lg md:text-xl font-semibold">Revenue Summary</h2>
+        <h2 className="text-lg md:text-xl font-semibold">Revenue Summary</h2>
 
-  <div className="grid grid-cols-1 mt-4 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-    {/* Total Fee Verified */}
-    <div className="bg-white shadow-md rounded-lg p-4 md:p-6 border border-indigo-300">
-      <p className="text-sm text-gray-600">Total Revenue</p>
-      <h2 className="text-2xl font-bold text-indigo-600">IDR {totalFeeVerified.toLocaleString()}</h2>
-      <p className="text-xs text-gray-500 mt-1">Verified</p>
-    </div>
+        <div className="grid grid-cols-1 mt-4 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {/* Total Fee Verified */}
+          <div className="bg-white shadow-md rounded-lg p-4 md:p-6 border border-indigo-300">
+            <p className="text-sm text-gray-600">Total Revenue</p>
+            <h2 className="text-2xl font-bold text-indigo-600">IDR {totalFeeVerified.toLocaleString()}</h2>
+            <p className="text-xs text-gray-500 mt-1">Verified</p>
+          </div>
 
-    {/* Fee Pending */}
-    <div className="bg-white shadow-md rounded-lg p-4 md:p-6 border border-yellow-300">
-      <p className="text-sm text-gray-600">Fee Pending Verification</p>
-      <h2 className="text-2xl font-bold text-yellow-500">IDR {totalFeePending.toLocaleString()}</h2>
-      <p className="text-xs text-gray-500 mt-1">In Process</p>
-    </div>
+          {/* Fee Pending */}
+          <div className="bg-white shadow-md rounded-lg p-4 md:p-6 border border-yellow-300">
+            <p className="text-sm text-gray-600">Fee Pending Verification</p>
+            <h2 className="text-2xl font-bold text-yellow-500">IDR {totalFeePending.toLocaleString()}</h2>
+            <p className="text-xs text-gray-500 mt-1">In Process</p>
+          </div>
 
-    {/* Completed Sessions */}
-    <div className="bg-white shadow-md rounded-lg p-4 md:p-6 border border-green-300">
-      <p className="text-sm text-gray-600">Session Completed</p>
-      <h2 className="text-2xl font-bold text-green-600">{sessionsCompleted} Session</h2>
-    </div>
+          {/* Completed Sessions */}
+          <div className="bg-white shadow-md rounded-lg p-4 md:p-6 border border-green-300">
+            <p className="text-sm text-gray-600">Session Completed</p>
+            <h2 className="text-2xl font-bold text-green-600">{sessionsCompleted} Session</h2>
+          </div>
 
-    {/* Pending Sessions */}
-    <div className="bg-white shadow-md rounded-lg p-4 md:p-6 border border-red-300">
-      <p className="text-sm text-gray-600">Session Pending</p>
-      <h2 className="text-2xl font-bold text-red-500">{sessionsPending} Session</h2>
-    </div>
-  </div>
-</div>
+          {/* Pending Sessions */}
+          <div className="bg-white shadow-md rounded-lg p-4 md:p-6 border border-red-300">
+            <p className="text-sm text-gray-600">Session Pending</p>
+            <h2 className="text-2xl font-bold text-red-500">{sessionsPending} Session</h2>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
