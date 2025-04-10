@@ -1,24 +1,31 @@
-import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
 
 // icons
 import { GoBell } from "react-icons/go";
 import { FiLogOut, FiMenu } from "react-icons/fi";
 
 const Header = () => {
-    const [showDropDown, setShowDropDown] = useState(false)
+    const [showDropDown, setShowDropDown] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [profile, setProfile] = useState(null);
+    const navigate = useNavigate(); // Initialize useNavigate for navigation
 
     useEffect(() => {
-            const savedProfile = JSON.parse(localStorage.getItem("userProfile"));
-            if (savedProfile) setProfile(savedProfile);
-        }, []);
+        const savedProfile = JSON.parse(localStorage.getItem("userProfile"));
+        if (savedProfile) setProfile(savedProfile);
+    }, []);
 
-    useEffect(() =>{
+    useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
+
+    // Logout function
+    const handleLogout = () => {
+        localStorage.clear(); // Clear all localStorage data
+        navigate("/login"); // Redirect to the login page
+    };
 
     return (
         <div className='flex justify-between items-center p-4'>
@@ -29,30 +36,13 @@ const Header = () => {
 
             {/* Menu */}
             <div className='flex items-center space-x-5'>
-                {/* Search */}
-                <div className='hidden md:flex'>
-                    <input 
-                        type="text" 
-                        placeholder='Search...'
-                        className='bg-indigo-100/30 px-4 py-2 rounded-lg focus:outline-0 focus:ring-2 focus:ring-indigo-600' 
-                    />
-                </div>
-
-                {/* Notif */}
-                <div className='flex items-center space-x-5'>
-                    <button className='relative text-2xl text-gray-600'>
-                        <GoBell size={32} />
-                        <span className='absolute top-0 right-0 -mt-1 -mr-1 flex justify-center items-center bg-indigo-600 text-white font-semibold text-[10px] w-5 h-4 rounded-full border-2 border-white'>2</span>
-                    </button>
-                </div>
-
                 {/* Profile */}
                 <div>
-                    <img 
+                    <img
                         onClick={() => setShowDropDown(!showDropDown)}
                         className='w-10 h-10 rounded-full border-2 cursor-pointer'
-                        src={profile?.profilePicture || "https://randomuser.me/api/portraits/lego/3.jpg"} 
-                        alt="profile" 
+                        src={profile?.profilePicture || "https://randomuser.me/api/portraits/lego/3.jpg"}
+                        alt="profile"
                     />
 
                     {showDropDown && (
@@ -60,19 +50,19 @@ const Header = () => {
                             <Link to="/teacher/profile" className='block px-4 py-2 hover:bg-gray-100'>
                                 Profile
                             </Link>
-                            <button className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2">
+                            <button
+                                onClick={handleLogout} // Attach the logout function
+                                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
+                            >
                                 <FiLogOut size={16} />
                                 <span>Logout</span>
                             </button>
                         </div>
                     )}
                 </div>
-            
             </div>
-        
-        
         </div>
-    )
-}
+    );
+};
 
-export default Header
+export default Header;

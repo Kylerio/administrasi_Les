@@ -43,7 +43,7 @@ function App() {
         
         {/* side teacher */}
         <Route path="/teacher" element={isLoggedIn && role === "teacher" ? <Layout /> : <Navigate to="/login" />}>
-          <Route index element={isProfileComplete ? <Home /> : <Navigate to="/teacher" />} />
+          <Route index element={ <Home />} />
           <Route path="schedule" element={<Schedule />} />
           <Route path="profile" element={<Profile />} />
           <Route path="profile/edit" element={<ProfileForm />} />
