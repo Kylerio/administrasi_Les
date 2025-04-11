@@ -54,7 +54,7 @@ function App() {
         {/* side admin */}
         <Route path="/admin" element={isLoggedIn && role === "admin" ? <AdminLayout /> : <Navigate to="/login" />}>
           <Route index element={<CreateSession />} />
-          <Route path="viewDataTeacher" element={<ViewDataTeacher />} />
+          <Route path="user-management" element={<ViewDataTeacher />} />
           <Route path="viewListFee" element={<ViewListFee />} />
           <Route path="verifyAttendance" element={<VerifyAttendance />} />
         </Route>

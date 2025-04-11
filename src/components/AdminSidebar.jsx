@@ -11,8 +11,8 @@ const AdminSidebar = () => {
     const location = useLocation();
 
     const AdminSideBar_Links = [
-        { id: 1, path:"/admin", name: "Create Session", icon: PiChalkboardFill},
-        { id: 2, path:"/admin/viewDataTeacher", name: "View Data Teacher", icon: PiUserListFill},
+        { id: 1, path:"/admin", name: "Session Management", icon: PiChalkboardFill},
+        { id: 2, path:"/admin/user-management", name: "User Management", icon: PiUserListFill},
         { id: 3, path:"/admin/viewListFee", name: "View List Fee", icon: RiFileList3Fill},
         { id: 4, path:"/admin/verifyAttendance", name: "Verify Attendance"},
     ]
